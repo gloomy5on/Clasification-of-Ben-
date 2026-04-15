@@ -1,0 +1,193 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilah.In</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="header">
+  <a href="#home" class="logo">Pilah.<span>In</span></a>
+
+  <i class='bx bx-menu' id="menu-icon"></i>
+
+  <nav class="navbar">
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+    <a href="#classification">Classification</a>
+  </nav>
+</header>
+
+<section class="home" id="home">
+
+  <div class="home-content">
+    <h1>Welcome to <span>Pilah.In</span></h1>
+
+    <h3>
+      Solusi cerdas pengelolaan limbah melalui pengenalan gambar instan.
+      Karena setiap sampah punya tempatnya sendiri.
+    </h3>
+
+    <div class="btn-group">
+      <a href="#classification" class="btn">Mulai Klasifikasi</a>
+    </div>
+  </div>
+
+  <div class="home-img">
+    <img src="{{ url_for('static', filename='icons8-trash-549.png') }}" alt="Trash">
+  </div>
+
+</section>
+
+<section class="about" id="about">
+
+  <div class="about-img">
+    <img src="{{ url_for('static', filename='icons8-document-549.png') }}" alt="About">
+  </div>
+
+  <div class="about-content">
+    <h2>About The <span>Model</span></h2>
+
+    <p>
+      Proyek ini menggunakan teknologi Deep Learning berbasis VGG16
+      untuk mengklasifikasikan sampah ke dalam 10 kategori berbeda
+      secara otomatis dari gambar.
+    </p>
+  </div>
+
+</section>
+
+<section class="classification" id="classification">
+
+  <div class="text-center">
+    <h1>Cari Tau <span>Sampahnya!</span></h1>
+    <p>Tinggal upload foto, langsung keluar hasilnya.</p>
+  </div>
+
+  <div class="upload-card">
+
+    <form id="uploadForm">
+
+      <input
+        type="file"
+        id="file"
+        name="file"
+        accept="image/*"
+        required
+      >
+
+      <button type="submit" class="btn" id="btnUpload">
+        Upload & Detect
+      </button>
+
+    </form>
+
+  </div>
+
+  <div class="result-card" id="resultBox" style="display:none;"></div>
+
+</section>
+
+<footer class="footer">
+
+  <div class="social-icons">
+    <a href="#"><i class='bx bxl-github'></i></a>
+    <a href="#"><i class='bx bxl-linkedin-square'></i></a>
+    <a href="#"><i class='bx bxl-instagram-alt'></i></a>
+    <a href="#"><i class='bx bxl-discord-alt'></i></a>
+  </div>
+
+  <ul class="footer-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#classification">Classification</a></li>
+    <li><a href="#home">Home</a></li>
+  </ul>
+
+</footer>
+
+
+<script>
+
+const menuIcon = document.getElementById("menu-icon");
+const navbar = document.querySelector(".navbar");
+
+menuIcon.onclick = () => {
+  navbar.classList.toggle("active");
+};
+
+
+document.getElementById("uploadForm").addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    const fileInput = document.getElementById("file");
+    const file = fileInput.files[0];
+
+    const btn = document.getElementById("btnUpload");
+    const box = document.getElementById("resultBox");
+
+    if(!file){
+        alert("Pilih gambar dulu");
+        return;
+    }
+
+    btn.innerHTML = "Scanning...";
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try{
+
+        const res = await fetch("/", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        box.style.display = "block";
+
+        if(data.error){
+
+            box.innerHTML = `
+                <h4>${data.error}</h4>
+            `;
+
+        } else {
+
+            box.innerHTML = `
+                <h4>${data.result}</h4>
+                <p>Confidence: ${data.confidence}%</p>
+                <img src="${data.file_path}" style="max-width:320px;width:100%;border-radius:15px;margin-top:15px;">
+            `;
+        }
+
+        box.scrollIntoView({
+            behavior: "smooth"
+        });
+
+    } catch(error){
+
+        box.style.display = "block";
+        box.innerHTML = `
+            <h4>Terjadi error saat upload</h4>
+        `;
+
+    }
+
+    btn.innerHTML = "Upload & Detect";
+    btn.disabled = false;
+
+});
+</script>
+
+</body>
+</html>
